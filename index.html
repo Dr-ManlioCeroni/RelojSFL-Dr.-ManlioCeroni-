@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>SFL 2</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background-color: #09090b; font-family: 'Inter', sans-serif; }
+        .font-orbitron { font-family: 'Orbitron', monospace; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        
+        /* Animaciones personalizadas */
+        @keyframes pulse-red {
+            0%, 100% { text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); opacity: 1; }
+            50% { text-shadow: 0 0 40px rgba(239, 68, 68, 1); opacity: 0.8; }
+        }
+        .animate-pulse-red {
+            animation: pulse-red 1s infinite;
+        }
+        
+        /* Scrollbar oculta pero funcional */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col overflow-hidden relative selection:bg-violet-600 selection:text-white">
+
+    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-orange-500 opacity-70"></div>
+
+    <div class="flex-1 flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-4 relative z-10">
+        
+        <div class="text-center w-full mb-8 md:mb-12">
+            <h1 id="timer-display" class="font-orbitron font-black text-[18vw] leading-none tracking-tighter tabular-nums transition-colors duration-300 select-none text-white">
+                10:00
+            </h1>
+            
+            <div class="mt-4 space-y-2">
+                <h2 id="segment-name" class="text-3xl md:text-5xl font-orbitron font-bold text-white uppercase tracking-widest">
+                    Cargando...
+                </h2>
+                <p id="segment-info" class="text-zinc-500 font-orbitron text-sm uppercase tracking-[0.2em]">
+                    Segmento 1 de 2
+                  Desarrollo: Dr. Manlio Ceroni 
+                </p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 mb-12 w-full">
+            <button onclick="toggleTimer()" id="btn-toggle" class="font-orbitron font-bold uppercase tracking-wider flex items-center justify-center gap-2 px-8 py-3 rounded-md bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all min-w-[160px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> INICIAR
+            </button>
+
+            <button onclick="nextSegment()" class="font-orbitron font-bold uppercase tracking-wider flex items-center justify-center gap-2 px-6 py-3 rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg> SIGUIENTE
+            </button>
+
+            <button onclick="resetCurrent()" class="font-orbitron font-bold uppercase tracking-wider flex items-center justify-center gap-2 px-6 py-3 rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> REINICIAR
+            </button>
+
+            <button onclick="resetAll()" class="font-orbitron font-bold uppercase tracking-wider flex items-center justify-center gap-2 px-6 py-3 rounded-md border border-red-900 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:border-red-500 transition-all">
+                REINICIAR TODO
+            </button>
+            
+            <button onclick="toggleConfig()" class="font-orbitron font-bold uppercase tracking-wider flex items-center justify-center gap-2 px-6 py-3 rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all">
+                CONFIGURAR
+            </button>
+        </div>
+
+        <div class="w-full max-w-4xl bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 backdrop-blur-sm">
+            <p class="text-xs text-zinc-500 font-bold uppercase mb-3 ml-1">Segmentos</p>
+            <div id="segments-list" class="flex gap-3 overflow-x-auto pb-2 hide-scroll">
+                </div>
+        </div>
+    </div>
+
+    <div class="h-16 w-full bg-zinc-950 border-t border-zinc-800 flex items-center justify-between px-8 relative z-20 mt-auto">
+        <div class="flex items-center gap-3 text-violet-500">
+            <svg class="animate-pulse" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span class="font-orbitron font-bold uppercase tracking-widest text-sm md:text-base">Tiempo Global</span>
+        </div>
+        <div id="global-timer" class="font-orbitron font-bold text-2xl md:text-3xl text-zinc-200 tabular-nums">
+            00:00
+        </div>
+    </div>
+
+    <div id="config-modal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-2xl">
+            <h2 class="text-2xl font-orbitron font-bold mb-4 text-white">Configuración</h2>
+            <div id="config-inputs" class="space-y-4 max-h-[50vh] overflow-y-auto mb-6 pr-2">
+                </div>
+            <div class="flex gap-3 pt-4 border-t border-zinc-800">
+                <button onclick="addSegment()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded text-sm text-white font-bold border border-zinc-700">+ AGREGAR</button>
+                <div class="flex-1"></div>
+                <button onclick="saveConfig()" class="px-6 py-2 bg-violet-600 hover:bg-violet-500 rounded text-white font-bold font-orbitron">GUARDAR Y CERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO INICIAL ---
+        let segments = JSON.parse(localStorage.getItem('sb_data')) || [
+            { name: 'Charla', minutes: 10, seconds: 0 },
+            { name: 'Q&A', minutes: 5, seconds: 0 }
+        ];
+        
+        let state = {
+            activeIdx: 0,
+            timeLeft: segments[0].minutes * 60 + segments[0].seconds,
+            globalTime: 0,
+            isRunning: false,
+            interval: null
+        };
+
+        // --- AUDIO ---
+        const playBeep = () => {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            const ctx = new AC();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+        };
+
+        // --- FORMATO ---
+        const formatTime = (seconds) => {
+            const isNeg = seconds < 0;
+            const abs = Math.abs(seconds);
+            const m = Math.floor(abs / 60);
+            const s = abs % 60;
+            return `${isNeg ? '-' : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        };
+
+        // --- CORE TIMER ---
+        const tick = () => {
+            state.globalTime++;
+            
+            // Lógica principal
+            let newVal = state.timeLeft - 1;
+            const isLast = state.activeIdx === segments.length - 1;
+
+            if (newVal === 0) {
+                playBeep();
+                if (!isLast) {
+                    // Auto avance con pequeño delay para que se vea el 00:00
+                    setTimeout(() => {
+                        state.activeIdx++;
+                        const next = segments[state.activeIdx];
+                        state.timeLeft = next.minutes * 60 + next.seconds;
+                        render();
+                    }, 500); // 0.5s en 00:00
+                    state.timeLeft = 0; // Visual fix
+                } else {
+                    state.timeLeft = newVal; // Negativo
+                }
+            } else {
+                state.timeLeft = newVal;
+            }
+            render();
+        };
+
+        // --- CONTROLES ---
+        function toggleTimer() {
+            if (state.isRunning) {
+                clearInterval(state.interval);
+                state.isRunning = false;
+            } else {
+                // Audio unlock
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if(AC) new AC().resume();
+                
+                state.interval = setInterval(tick, 1000);
+                state.isRunning = true;
+            }
+            render();
+        }
+
+        function nextSegment() {
+            if (state.activeIdx < segments.length - 1) {
+                state.activeIdx++;
+                resetSegmentTime();
+            }
+        }
+
+        function resetCurrent() {
+            state.isRunning = false;
+            clearInterval(state.interval);
+            resetSegmentTime();
+        }
+
+        function resetSegmentTime() {
+            const seg = segments[state.activeIdx];
+            state.timeLeft = seg.minutes * 60 + seg.seconds;
+            render();
+        }
+
+        function resetAll() {
+            state.isRunning = false;
+            clearInterval(state.interval);
+            state.activeIdx = 0;
+            state.globalTime = 0;
+            resetSegmentTime();
+        }
+
+        function jumpTo(idx) {
+            state.isRunning = false;
+            clearInterval(state.interval);
+            state.activeIdx = idx;
+            resetSegmentTime();
+        }
+
+        // --- RENDERIZADO ---
+        function render() {
+            const display = document.getElementById('timer-display');
+            const btn = document.getElementById('btn-toggle');
+            
+            // Actualizar tiempos
+            display.innerText = formatTime(state.timeLeft);
+            document.getElementById('global-timer').innerText = formatTime(state.globalTime);
+            document.getElementById('segment-name').innerText = segments[state.activeIdx].name;
+            document.getElementById('segment-info').innerText = `SEGMENTO ${state.activeIdx + 1} DE ${segments.length}`;
+
+            // Botón Play/Pause
+            btn.innerHTML = state.isRunning 
+                ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> PAUSAR`
+                : `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> INICIAR`;
+
+            // Colores por umbral
+            display.className = "font-orbitron font-black text-[18vw] leading-none tracking-tighter tabular-nums transition-colors duration-300 select-none ";
+            
+            const isLast = state.activeIdx === segments.length - 1;
+            
+            if (state.timeLeft <= 0 && isLast) {
+                display.className += "text-red-500 animate-pulse-red drop-shadow-[0_0_30px_rgba(239,68,68,0.8)]";
+            } else if (state.timeLeft <= 0) {
+                display.className += "text-red-500";
+            } else if (state.timeLeft <= 120) {
+                display.className += "text-orange-500";
+            } else if (state.timeLeft <= 600) {
+                display.className += "text-yellow-400";
+            } else {
+                display.className += "text-white";
+            }
+
+            // Render Lista de Segmentos
+            const list = document.getElementById('segments-list');
+            list.innerHTML = segments.map((seg, i) => {
+                const active = i === state.activeIdx;
+                const activeClass = active ? 'bg-violet-600 border-violet-500 text-white shadow-lg' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:bg-zinc-900';
+                const textClass = active ? 'text-white' : 'text-zinc-500';
+                return `
+                    <div onclick="jumpTo(${i})" class="flex-shrink-0 w-48 p-4 rounded-lg cursor-pointer border transition-all ${activeClass}">
+                        <p class="text-sm font-bold truncate ${active ? '' : 'text-zinc-300'}">${seg.name}</p>
+                        <p class="font-orbitron text-xl mt-1 ${textClass}">${String(seg.minutes).padStart(2,'0')}:${String(seg.seconds).padStart(2,'0')}</p>
+                    </div>
+                `
+            }).join('');
+        }
+
+        // --- CONFIGURACIÓN ---
+        function toggleConfig() {
+            const modal = document.getElementById('config-modal');
+            const container = document.getElementById('config-inputs');
+            
+            if (modal.classList.contains('hidden')) {
+                // Abrir
+                container.innerHTML = segments.map((seg, i) => `
+                    <div class="bg-black/50 p-3 rounded border border-zinc-700 grid grid-cols-12 gap-2 items-end">
+                        <div class="col-span-5">
+                            <label class="text-[10px] text-zinc-500 uppercase">Nombre</label>
+                            <input type="text" class="w-full bg-zinc-800 text-white text-sm p-1 rounded border border-zinc-600" value="${seg.name}" onchange="updateSeg(${i}, 'name', this.value)">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="text-[10px] text-zinc-500 uppercase">Min</label>
+                            <input type="number" class="w-full bg-zinc-800 text-white text-sm p-1 rounded border border-zinc-600" value="${seg.minutes}" onchange="updateSeg(${i}, 'minutes', this.value)">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="text-[10px] text-zinc-500 uppercase">Seg</label>
+                            <input type="number" class="w-full bg-zinc-800 text-white text-sm p-1 rounded border border-zinc-600" value="${seg.seconds}" onchange="updateSeg(${i}, 'seconds', this.value)">
+                        </div>
+                        <div class="col-span-1 text-center">
+                            ${segments.length > 1 ? `<button onclick="removeSeg(${i})" class="text-red-500 hover:text-white">✕</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function updateSeg(idx, field, val) {
+            if (field === 'minutes' || field === 'seconds') val = parseInt(val) || 0;
+            segments[idx][field] = val;
+        }
+
+        function addSegment() {
+            segments.push({ name: 'Nuevo', minutes: 5, seconds: 0 });
+            toggleConfig(); toggleConfig(); // Refresh rápido
+        }
+
+        function removeSeg(idx) {
+            segments.splice(idx, 1);
+            toggleConfig(); toggleConfig();
+        }
+
+        function saveConfig() {
+            localStorage.setItem('sb_data', JSON.stringify(segments));
+            resetAll(); // Resetear para aplicar cambios
+            toggleConfig();
+        }
+
+        // Inicializar
+        render();
+
+    </script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
